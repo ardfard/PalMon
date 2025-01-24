@@ -42,7 +42,7 @@ install_nix() {
 cleanup() {
     echo "Shutting down services..."
     # Kill any remaining python processes
-    pkill -f "python -m pokemon_api"
+    pkill -f "python -m palmon"
     exit 0
 }
 
@@ -119,7 +119,7 @@ nix develop --command bash << 'EOF'
     fi
     
     echo "Running Pokemon Scraper..."
-    python -m pokemon_api.scraper.pokemon_scraper
+    python -m palmon.scraper.pokemon_scraper
     
     echo "✓ Pokemon Scraper has completed!"
     echo "Starting API Server..."
@@ -128,7 +128,7 @@ nix develop --command bash << 'EOF'
     echo "Press Ctrl+C to stop the server"
     
     # Run the server in background
-    python -m pokemon_api.api.app &
+    python -m palmon.api.app &
     SERVER_PID=$!
     
     # Run smoke tests

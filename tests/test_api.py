@@ -50,3 +50,31 @@ def test_get_nonexistent_pokemon():
     response = client.get("/api/pokemon/999")
     assert response.status_code == 404
 
+def test_get_pokemon_list_error(test_db, monkeypatch):
+    """Test error handling in get_pokemon list."""
+    def mock_query(*args, **kwargs):
+        raise Exception("Database error")
+    
+    # Patch the query method to raise an exception
+    monkeypatch.setattr(test_db, "query", mock_query)
+    
+    response = client.get("/api/pokemon")
+    assert response.status_code == 500
+
+def test_get_pokemon_by_id_error(test_db, monkeypatch):
+    """Test error handling in get_pokemon_by_id."""
+    def mock_query(*args, **kwargs):
+        raise Exception("Database error")
+    
+    # Patch the query method to raise an exception
+    monkeypatch.setattr(test_db, "query", mock_query)
+    
+    response = client.get("/api/pokemon/1")
+    assert response.status_code == 500
+
+def test_metrics_endpoint():
+    """Test metrics endpoint."""
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    assert "pokemon_requests_total" in response.text
+

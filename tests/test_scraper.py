@@ -50,3 +50,47 @@ def test_scrape_pokemon_error(mock_get, test_db):
     assert result is False  # Check that scraping failed
     pokemon_count = test_db.query(Pokemon).count()
     assert pokemon_count == 0 
+
+@patch('requests.get')
+def test_scrape_pokemon_non_200_response(mock_get, test_db):
+    """Test scraper handling of non-200 response."""
+    mock_get.return_value = Mock(
+        status_code=404  # Simulate a not found response
+    )
+    
+    scraper = PokemonScraper(session=test_db)
+    result = scraper.scrape_pokemon(limit=1)
+    
+    assert result is False  # Should return False on failure
+    pokemon_count = test_db.query(Pokemon).count()
+    assert pokemon_count == 0  # No Pokemon should be added
+
+@patch('requests.get')
+def test_scrape_pokemon_update_existing(mock_get, test_db, mock_response):
+    """Test scraping when Pokemon already exists."""
+    # First create an existing Pokemon
+    existing_pokemon = Pokemon(
+        id=1,
+        name="old_name",
+        height=1.0,
+        weight=1.0,
+        types="normal",
+        image_url="old.png",
+        base_experience=100
+    )
+    test_db.add(existing_pokemon)
+    test_db.commit()
+    
+    # Now try to scrape the same Pokemon
+    mock_get.return_value = Mock(
+        status_code=200,
+        json=lambda: mock_response
+    )
+    
+    scraper = PokemonScraper(session=test_db)
+    result = scraper.scrape_pokemon(limit=1)
+    
+    assert result is True
+    pokemon = test_db.query(Pokemon).first()
+    assert pokemon.name == "bulbasaur"  # Should be updated to new name
+    assert pokemon.types == "grass,poison"  # Should be updated to new types

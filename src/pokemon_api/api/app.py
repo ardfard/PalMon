@@ -66,7 +66,7 @@ async def get_pokemon(page: int = 1, limit: int = 10, db: Session = Depends(get_
         return response
     except Exception as e:
         pokemon_requests.labels(endpoint='/api/pokemon', status='500').inc()
-        raise
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/pokemon/{pokemon_id}")
 async def get_pokemon_by_id(pokemon_id: int, db: Session = Depends(get_db)):
@@ -90,7 +90,7 @@ async def get_pokemon_by_id(pokemon_id: int, db: Session = Depends(get_db)):
         raise
     except Exception as e:
         pokemon_requests.labels(endpoint='/api/pokemon/{id}', status='500').inc()
-        raise
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

@@ -119,17 +119,20 @@ fi
 
 echo "Step 3: Setting up development environment..."
 
-# Use a heredoc to create a persistent shell session
-nix develop --command bash << 'EOF'
+# Create a temporary script file
+TMP_SCRIPT=$(mktemp)
+trap 'rm -f $TMP_SCRIPT' EXIT
+
+# Write the commands to the temporary script
+cat << 'INNERSCRIPT' > $TMP_SCRIPT
     set -euo pipefail
     
-    if [ ! -f .venv/pyvenv.cfg ]; then
-        echo "Installing dependencies..."
-        uv pip install -e . || exit 1
-    fi
+    echo "Installing dependencies..."
+    # Always install dependencies to ensure they're up to date
+    uv pip install -e .
     
     echo "Running Pokemon Scraper..."
-    python -m palmon.scraper.pokemon_scraper || exit 1
+    python -m palmon.scraper.pokemon_scraper
     
     echo "✓ Pokemon Scraper has completed!"
     echo "Starting API Server..."
@@ -151,7 +154,11 @@ nix develop --command bash << 'EOF'
     
     # Wait for the server process
     wait $SERVER_PID
-EOF
+INNERSCRIPT
 
-# Keep the script running
-wait
+# Execute the script with nix develop and capture the exit code
+nix develop --command bash $TMP_SCRIPT
+RESULT=$?
+
+# Exit with the captured exit code
+exit $RESULT

@@ -32,9 +32,6 @@ packages = ["."]
 [tool.hatch.metadata]
 allow-direct-references = true
 
-[tool.uv]
-python = "3.11"
-
 [tool.pytest.ini_options]
 addopts = "-v --cov=pokemon_api --cov-report=term-missing"
 testpaths = ["tests"]

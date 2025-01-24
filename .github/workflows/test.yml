@@ -18,11 +18,23 @@ jobs:
       - name: Setup Nix Cache
         uses: DeterminateSystems/magic-nix-cache-action@main
       
+      - name: Cache Python packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .venv
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
       - name: Run Tests
         run: |
           nix develop --command bash -c '
             # Install dependencies
             uv pip install -e .
+            # Install test dependencies
+            uv pip install pytest pytest-cov pytest-asyncio httpx pytest-mock
             
             # Run tests with coverage
             pytest --cov=palmon --cov-report=xml

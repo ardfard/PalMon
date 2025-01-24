@@ -1,1 +1,1 @@
- 
+from pokemon_api.database.models import Pokemon, SessionLocal 

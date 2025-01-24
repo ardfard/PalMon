@@ -38,7 +38,18 @@ install_nix() {
     fi
 }
 
-echo "=== Pokemon Scraper Setup and Runner ==="
+# Function to handle cleanup on exit
+cleanup() {
+    echo "Shutting down services..."
+    # Kill any remaining python processes
+    pkill -f "python -m pokemon_api"
+    exit 0
+}
+
+# Set up trap for cleanup
+trap cleanup SIGINT SIGTERM
+
+echo "=== Pokemon Scraper and API Server Setup ==="
 echo "Step 1: Checking Nix installation..."
 
 # Check if Nix is already installed
@@ -99,15 +110,45 @@ if ! nix show-config | grep -q "experimental-features.*flakes"; then
 fi
 
 echo "Step 3: Setting up development environment..."
-# Enter nix development shell and run the scraper
-echo "Starting Pokemon Scraper..."
-nix develop --command bash -c '
+
+# Use a heredoc to create a persistent shell session
+nix develop --command bash << 'EOF'
     if [ ! -f .venv/pyvenv.cfg ]; then
         echo "Installing dependencies..."
         uv pip install -e .
     fi
+    
     echo "Running Pokemon Scraper..."
     python -m scraper.pokemon_scraper
-'
+    
+    echo "✓ Pokemon Scraper has completed!"
+    echo "Starting API Server..."
+    echo "API will be available at http://localhost:8000"
+    echo "Documentation available at http://localhost:8000/docs"
+    echo "Press Ctrl+C to stop the server"
+    
+    # Run the server in background
+    python -m api.app &
+    SERVER_PID=$!
+    
+    # Run smoke tests
+    echo "Running smoke tests..."
+    chmod +x smoke_test.sh
+    ./smoke_test.sh
+    TEST_STATUS=$?
+    
+    if [ $TEST_STATUS -ne 0 ]; then
+        echo "Smoke tests failed! Shutting down..."
+        kill $SERVER_PID
+        exit 1
+    fi
+    
+    echo "Smoke tests passed! Server is ready for use."
+    echo "Press Ctrl+C to stop the server"
+    
+    # Wait for the server process
+    wait $SERVER_PID
+EOF
 
-echo "✓ Pokemon Scraper has completed!" 
+# Keep the script running
+wait

@@ -5,7 +5,7 @@ from palmon.database.models import SessionLocal, Pokemon
 from palmon.database import get_db
 from pprint import pprint
 
-client = TestClient(app)
+client = TestClient(app=app)
 
 @pytest.fixture(autouse=True)
 def override_dependency(test_db):

@@ -33,11 +33,11 @@ jobs:
           nix develop --command bash -c '
             # Install dependencies
             uv pip install -e .
-            # Install test dependencies
-            uv pip install pytest pytest-cov pytest-asyncio httpx pytest-mock
+            # Install test dependencies with specific versions
+            uv pip install "pytest>=8.0.0" "pytest-cov>=4.1.0" "pytest-asyncio>=0.23.5" "httpx>=0.24.0,<0.25.0" "pytest-mock>=3.12.0" "fastapi>=0.109.1" "starlette>=0.36.3"
             
             # Run tests with coverage
-            pytest --cov=palmon --cov-report=xml
+            pytest --cov=palmon --cov-report=xml --asyncio-mode=auto
           '
       
       - name: Upload Coverage

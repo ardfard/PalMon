@@ -10,6 +10,16 @@ dependencies = [
     "uvicorn==0.27.1",
     "sqlalchemy==2.0.27",
     "aiohttp==3.9.3",
+    "starlette-prometheus==0.9.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest==8.0.0",
+    "pytest-cov==4.1.0",
+    "pytest-asyncio==0.23.5",
+    "httpx==0.26.0",
+    "pytest-mock==3.12.0",
 ]
 
 [build-system]
@@ -24,4 +34,23 @@ allow-direct-references = true
 
 [tool.uv]
 python = "3.11"
+
+[tool.pytest.ini_options]
+addopts = "-v --cov=pokemon_api --cov-report=term-missing"
+testpaths = ["tests"]
+python_files = "test_*.py"
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["pokemon_api"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "pass",
+]
 

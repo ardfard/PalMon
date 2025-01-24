@@ -119,7 +119,7 @@ nix develop --command bash << 'EOF'
     fi
     
     echo "Running Pokemon Scraper..."
-    python -m scraper.pokemon_scraper
+    python -m pokemon_api.scraper.pokemon_scraper
     
     echo "✓ Pokemon Scraper has completed!"
     echo "Starting API Server..."
@@ -128,7 +128,7 @@ nix develop --command bash << 'EOF'
     echo "Press Ctrl+C to stop the server"
     
     # Run the server in background
-    python -m api.app &
+    python -m pokemon_api.api.app &
     SERVER_PID=$!
     
     # Run smoke tests

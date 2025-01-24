@@ -138,7 +138,6 @@ cat << 'INNERSCRIPT' > $TMP_SCRIPT
     echo "Starting API Server..."
     echo "API will be available at http://localhost:8000"
     echo "Documentation available at http://localhost:8000/docs"
-    echo "Press Ctrl+C to stop the server"
     
     # Run the server in background
     python -m palmon.api.app &
@@ -149,10 +148,17 @@ cat << 'INNERSCRIPT' > $TMP_SCRIPT
     chmod +x smoke_test.sh
     ./smoke_test.sh || { kill $SERVER_PID; exit 1; }
     
-    echo "Smoke tests passed! Server is ready for use."
-    echo "Press Ctrl+C to stop the server"
+    echo "Smoke tests passed!"
     
-    # Wait for the server process
+    # If running in CI, exit after smoke tests
+    if [ -n "${CI:-}" ]; then
+        kill $SERVER_PID
+        exit 0
+    fi
+    
+    # Otherwise, keep running for local development
+    echo "Server is ready for use."
+    echo "Press Ctrl+C to stop the server"
     wait $SERVER_PID
 INNERSCRIPT
 

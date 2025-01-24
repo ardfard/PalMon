@@ -18,9 +18,25 @@ jobs:
       - name: Setup Nix Cache
         uses: DeterminateSystems/magic-nix-cache-action@main
       
+      - name: Cache Python packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .venv
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
       - name: Run script
         run: |
           # Make the script executable
           chmod +x run-palmon.sh
+          # Run the script and capture its exit code
           ./run-palmon.sh
+          exit_code=$?
+          if [ $exit_code -ne 0 ]; then
+            echo "Script failed with exit code $exit_code"
+            exit $exit_code
+          fi
         shell: bash

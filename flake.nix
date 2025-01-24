@@ -27,6 +27,7 @@
             
             # System dependencies
             gcc
+            sqlite
           ];
 
           shellHook = ''
@@ -36,6 +37,13 @@
               ${pkgs.python311}/bin/python -m venv .venv
             fi
             source .venv/bin/activate
+
+            # Create database directory
+            mkdir -p data
+
+            # Set environment variables
+            export PYTHONPATH="$PWD/src:$PYTHONPATH"
+            export DATABASE_PATH="$PWD/data/pokemon.db"
 
             # Install dependencies using uv
             if [ ! -f .venv/pyvenv.cfg ]; then

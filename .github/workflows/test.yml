@@ -39,9 +39,7 @@ jobs:
             # Run tests with coverage
             pytest --cov=palmon --cov-report=xml --asyncio-mode=auto
           '
-      
-      - name: Upload Coverage
-        uses: codecov/codecov-action@v3
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
         with:
-          files: ./coverage.xml
-          fail_ci_if_error: true 
+            token: ${{ secrets.CODECOV_TOKEN }}

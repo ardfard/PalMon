@@ -18,6 +18,7 @@ PalMon is stealing Pokemon data (please don't sue)
 ## Quick Start
 
 ⚠️ **WARNING** ⚠️
+
 Running `run-palmon.sh` will:
 - ☠☠ Install Nix package manager on your system ☠☠
 - Modify your shell configuration

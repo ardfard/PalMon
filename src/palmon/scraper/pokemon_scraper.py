@@ -1,5 +1,5 @@
 import requests
-from pokemon_api.database.models import Pokemon, SessionLocal
+from palmon.database.models import Pokemon, SessionLocal
 
 class PokemonScraper:
     def __init__(self, session=None):

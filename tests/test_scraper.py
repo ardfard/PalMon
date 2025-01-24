@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock, patch
-from pokemon_api.scraper.pokemon_scraper import PokemonScraper
-from pokemon_api.database.models import Pokemon
+from palmon.scraper.pokemon_scraper import PokemonScraper
+from palmon.database.models import Pokemon
 
 @pytest.fixture
 def mock_response():

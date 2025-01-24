@@ -1,5 +1,5 @@
 [project]
-name = "pokemon-api"
+name = "palmon"
 version = "0.1.0"
 description = "A Pokemon API with data scraping capabilities"
 requires-python = ">=3.11"
@@ -33,13 +33,13 @@ packages = ["."]
 allow-direct-references = true
 
 [tool.pytest.ini_options]
-addopts = "-v --cov=pokemon_api --cov-report=term-missing"
+addopts = "-v --cov=palmon --cov-report=term-missing"
 testpaths = ["tests"]
 python_files = "test_*.py"
 asyncio_mode = "auto"
 
 [tool.coverage.run]
-source = ["pokemon_api"]
+source = ["palmon"]
 omit = ["tests/*"]
 
 [tool.coverage.report]

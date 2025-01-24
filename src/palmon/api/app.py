@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
-from pokemon_api.database.models import SessionLocal, Pokemon
-from pokemon_api.database import get_db
+from palmon.database.models import SessionLocal, Pokemon
+from palmon.database import get_db
 from sqlalchemy.orm import Session
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware

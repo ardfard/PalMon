@@ -1,5 +1,5 @@
 import pytest
-from pokemon_api.database.models import Pokemon
+from palmon.database.models import Pokemon
 
 def test_pokemon_model_creation(test_db):
     """Test Pokemon model creation."""

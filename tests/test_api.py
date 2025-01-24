@@ -1,8 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
-from pokemon_api.api.app import app
-from pokemon_api.database.models import SessionLocal, Pokemon
-from pokemon_api.database import get_db
+from palmon.api.app import app
+from palmon.database.models import SessionLocal, Pokemon
+from palmon.database import get_db
 from pprint import pprint
 
 client = TestClient(app)

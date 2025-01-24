@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
-from pokemon_api.database.models import Base, Pokemon
+from palmon.database.models import Base, Pokemon
 
 @pytest.fixture(scope="session")
 def engine():

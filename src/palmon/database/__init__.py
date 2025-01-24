@@ -1,5 +1,5 @@
 """Database package."""
-from pokemon_api.database.models import SessionLocal
+from palmon.database.models import SessionLocal
 
 def get_db():
     """Get database session."""

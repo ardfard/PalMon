@@ -17,6 +17,15 @@ PalMon is stealing Pokemon data (please don't sue)
 
 ## Quick Start
 
+You can easily run the project with the provided script. It has two modes:
+
+1. with Nix
+2. with Docker
+
+### Running with Just Nix
+
+You can run run-palmon.sh that will detect if you have Nix installed and use it. Or if you don't have Nix installed, it will install it for you. Please consider the warning below below before running the script.
+
 ⚠️ **WARNING** ⚠️
 
 Running `run-palmon.sh` will:
@@ -37,6 +46,50 @@ This will:
 3. Scrape Pokemon data
 4. Start the API server
 5. Run smoke tests
+
+## Running with Docker
+
+For those who don't want to deal with Nix, you can use the provided script to run the project in a Docker container.
+This assumes you have Docker installed on your system. So if you don't have it, you can install it from [here](https://docs.docker.com/get-docker/).
+
+```
+./run-palmon-docker.sh
+```
+
+This will:
+1. Build the Docker image
+2. Run the container interactively
+3. Execute `run-palmon.sh` inside the container
+
+## Manual Setup
+
+If you already have a Python environment and the `uv` package manager, you can manually set up and run the project:
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/ardfard/PalMon.git
+   cd PalMon
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   uv pip install -e .
+   ```
+
+3. **Run the scraper**:
+   ```bash
+   python -m palmon.scraper.pokemon_scraper
+   ```
+
+4. **Start the API server**:
+   ```bash
+   python -m palmon.api.app
+   ```
+
+5. **Run smoke tests**:
+   ```bash
+   python -m palmon.tests.smoke_tests
+   ```
 
 ## API Documentation
 

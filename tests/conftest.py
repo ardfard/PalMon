@@ -1,15 +1,28 @@
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from pokemon_api.database.models import Base, Pokemon
 
-@pytest.fixture
-def test_db():
-    """Create a test database."""
-    engine = create_engine('sqlite:///:memory:')
-    Base.metadata.create_all(engine)
-    TestingSessionLocal = sessionmaker(bind=engine)
-    return TestingSessionLocal()
+@pytest.fixture(scope="session")
+def engine():
+    """Create the test database engine."""
+    engine = create_engine('sqlite:///:memory:', connect_args={"check_same_thread": False})
+    Base.metadata.create_all(engine)  # Create tables once for the test session
+    return engine
+
+@pytest.fixture(scope="function")
+def test_db(engine):
+    """Create a fresh test database for each test."""
+    connection = engine.connect()
+    transaction = connection.begin()
+    TestingSessionLocal = sessionmaker(bind=connection)
+    db = TestingSessionLocal()
+
+    yield db
+
+    db.close()
+    transaction.rollback()
+    connection.close()
 
 @pytest.fixture
 def sample_pokemon(test_db):

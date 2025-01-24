@@ -2,13 +2,14 @@ import requests
 from pokemon_api.database.models import Pokemon, SessionLocal
 
 class PokemonScraper:
-    def __init__(self):
+    def __init__(self, session=None):
         self.base_url = "https://pokeapi.co/api/v2"
-        self.session = SessionLocal()
+        self.session = session if session is not None else SessionLocal()
 
     def scrape_pokemon(self, limit=151):  # Default to original 151 Pokemon
         try:
             for pokemon_id in range(1, limit + 1):
+                print(f"Scraping Pokemon {pokemon_id} of {limit}")
                 response = requests.get(f"{self.base_url}/pokemon/{pokemon_id}")
                 if response.status_code == 200:
                     data = response.json()
@@ -36,8 +37,11 @@ class PokemonScraper:
         except Exception as e:
             print(f"Error scraping Pokemon: {str(e)}")
             self.session.rollback()
+            return False
         finally:
-            self.session.close()
+            if self.session is not None:
+                self.session.close()
+        return True
 
 if __name__ == "__main__":
     scraper = PokemonScraper()

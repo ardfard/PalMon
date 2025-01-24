@@ -1,7 +1,7 @@
 [project]
 name = "palmon"
 version = "0.1.0"
-description = "A Pokemon API with data scraping capabilities"
+description = "PalMon is stealing Pokemon data (please don't sue)"
 requires-python = ">=3.11"
 dependencies = [
     "requests==2.31.0",

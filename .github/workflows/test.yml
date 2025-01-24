@@ -1,0 +1,35 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      
+      - name: Setup Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+      
+      - name: Run Tests
+        run: |
+          nix develop --command bash -c '
+            # Install dependencies
+            uv pip install -e .
+            
+            # Run tests with coverage
+            pytest --cov=palmon --cov-report=xml
+          '
+      
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: true 

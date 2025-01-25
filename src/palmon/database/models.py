@@ -1,6 +1,11 @@
 import os
-from sqlalchemy import create_engine, Column, Integer, String, Float
+import logging
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import Column, Integer, String, Float
+
+# Configure SQLAlchemy logging
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 
 Base = declarative_base()
 
@@ -29,9 +34,24 @@ class Pokemon(Base):
             }
         }
 
+# Use aiosqlite for async SQLite support
 database_path = os.getenv('DATABASE_PATH', 'pokemon.db')
-engine = create_engine(f'sqlite:///{database_path}')
-SessionLocal = sessionmaker(bind=engine)
+engine = create_async_engine(
+    f'sqlite+aiosqlite:///{database_path}', 
+    echo=False  # Disable SQL echoing
+)
 
-# Create tables
-Base.metadata.create_all(engine) 
+# Create async session factory
+AsyncSessionLocal = sessionmaker(
+    engine, 
+    class_=AsyncSession, 
+    expire_on_commit=False
+)
+
+async def init_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        yield session 

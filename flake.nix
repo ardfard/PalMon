@@ -28,6 +28,16 @@
             # System dependencies
             gcc
             sqlite
+            stdenv.cc.cc.lib  # Adds libstdc++
+            
+            # Additional system libraries
+            zlib
+            openssl
+          ];
+
+          buildInputs = with pkgs; [
+            # Python packages needed at build time
+            python311Packages.greenlet
           ];
 
           shellHook = ''
@@ -44,6 +54,7 @@
             # Set environment variables
             export PYTHONPATH="$PWD/src:$PYTHONPATH"
             export DATABASE_PATH="$PWD/data/pokemon.db"
+            export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH
 
             # Install dependencies using uv
             if [ ! -f .venv/pyvenv.cfg ]; then

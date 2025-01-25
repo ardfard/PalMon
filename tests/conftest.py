@@ -1,56 +1,49 @@
 import pytest
-from sqlalchemy import create_engine, event
+import os
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from palmon.database.models import Base, Pokemon
 
+# Use an in-memory SQLite database for tests
+TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+
 @pytest.fixture(scope="session")
 def engine():
-    """Create the test database engine."""
-    engine = create_engine('sqlite:///:memory:', connect_args={"check_same_thread": False})
-    Base.metadata.create_all(engine)  # Create tables once for the test session
-    return engine
-
-@pytest.fixture(scope="function")
-def test_db(engine):
-    """Create a fresh test database for each test."""
-    connection = engine.connect()
-    transaction = connection.begin()
-    TestingSessionLocal = sessionmaker(bind=connection)
-    db = TestingSessionLocal()
-
-    yield db
-
-    db.close()
-    transaction.rollback()
-    connection.close()
+    """Create a test database engine."""
+    return create_async_engine(TEST_DATABASE_URL, echo=True)
 
 @pytest.fixture
-def sample_pokemon(test_db):
+async def db_session(engine):
+    """Create a test database session."""
+    async_session = sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
+    
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        
+    async with async_session() as session:
+        yield session
+        await session.rollback()
+        
+        # Clean up
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+
+@pytest.fixture
+async def sample_pokemon(db_session):
     """Create sample Pokemon data."""
-    pokemon_data = [
-        {
-            "id": 1,
-            "name": "bulbasaur",
-            "height": 0.7,
-            "weight": 6.9,
-            "types": "grass,poison",
-            "image_url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png",
-            "base_experience": 64
-        },
-        {
-            "id": 4,
-            "name": "charmander",
-            "height": 0.6,
-            "weight": 8.5,
-            "types": "fire",
-            "image_url": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png",
-            "base_experience": 62
-        }
-    ]
+    pokemon = Pokemon(
+        id=1,
+        name="bulbasaur",
+        height=0.7,
+        weight=6.9,
+        types="grass,poison",
+        image_url="https://example.com/bulbasaur.png",
+        base_experience=64
+    )
     
-    for data in pokemon_data:
-        pokemon = Pokemon(**data)
-        test_db.add(pokemon)
-    test_db.commit()
+    db_session.add(pokemon)
+    await db_session.commit()
     
-    return pokemon_data 
+    return pokemon

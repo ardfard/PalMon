@@ -38,46 +38,70 @@ class PokemonScraper:
             return None
 
     async def scrape_pokemon(self, limit=151, concurrency=10):
-        db = await self.session
-
-        # Limit concurrency with a semaphore
         sem = asyncio.Semaphore(concurrency)
+        client_pool = []
 
-        # Define an inner function that respects the semaphore
-        async def process_pokemon(client, pokemon_id):
-            async with sem:
-                data = await self.fetch_pokemon(client, pokemon_id)
-                if data is None:
-                    return
+        # Create a pool of clients
+        for _ in range(concurrency):
+            client = httpx.AsyncClient(
+                limits=httpx.Limits(max_keepalive_connections=1),
+                timeout=httpx.Timeout(10.0, connect=5.0)
+            )
+            client_pool.append(client)
 
-                pokemon = Pokemon(
-                    id=data['id'],
-                    name=data['name'],
-                    height=data['height'] / 10,
-                    weight=data['weight'] / 10,
-                    types=','.join(t['type']['name'] for t in data['types']),
-                    image_url=data['sprites']['front_default'],
-                    base_experience=data['base_experience']
-                )
+        try:
+            async def process_pokemon(pokemon_id):
+                # Use provided session if available, otherwise create new one
+                if self._db is not None:
+                    db = self._db
+                else:
+                    db = AsyncSessionLocal()
 
-                stmt = select(Pokemon).where(Pokemon.id == pokemon.id)
-                result = await db.execute(stmt)
-                existing = result.scalar_one_or_none()
+                async with sem:
+                    # Get a client from the pool
+                    client = client_pool[pokemon_id % concurrency]
+                    try:
+                        data = await self.fetch_pokemon(client, pokemon_id)
+                        if data is None:
+                            return
 
-                if existing:
-                    await db.delete(existing)
+                        pokemon = Pokemon(
+                            id=data['id'],
+                            name=data['name'],
+                            height=data['height'] / 10,
+                            weight=data['weight'] / 10,
+                            types=','.join(t['type']['name'] for t in data['types']),
+                            image_url=data['sprites']['front_default'],
+                            base_experience=data['base_experience']
+                        )
 
-                db.add(pokemon)
-                await db.commit()
-                logger.info(f"Scraped Pokémon: {pokemon.name}")
+                        stmt = select(Pokemon).where(Pokemon.id == pokemon.id)
+                        result = await db.execute(stmt)
+                        existing = result.scalar_one_or_none()
 
-        async with httpx.AsyncClient() as client:
+                        if existing:
+                            await db.delete(existing)
+
+                        db.add(pokemon)
+                        await db.commit()
+                        logger.info(f"Scraped Pokémon: {pokemon.name}")
+
+                    except Exception as e:
+                        await db.rollback()  # Rollback on error
+                        logger.error(f"Error processing Pokemon {pokemon_id}: {str(e)}")
+                        raise  # Re-raise the exception for the test to catch
+
             # Create and run tasks
             tasks = [
-                process_pokemon(client, pokemon_id)
+                process_pokemon(pokemon_id)
                 for pokemon_id in range(1, limit + 1)
             ]
             await asyncio.gather(*tasks)
+
+        finally:
+            # Clean up clients
+            for client in client_pool:
+                await client.aclose()
 
         return True
 

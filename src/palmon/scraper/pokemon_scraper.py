@@ -2,11 +2,13 @@ import asyncio
 import httpx
 import logging
 import traceback
+import os
+from dotenv import load_dotenv
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from palmon.database.models import Pokemon, AsyncSessionLocal, init_db
 
-# Set up logging
+        # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -37,9 +39,13 @@ class PokemonScraper:
             )
             return None
 
-    async def scrape_pokemon(self, limit=151, concurrency=10):
+    async def scrape_pokemon(self, limit=None, concurrency=None):
+        # Use environment variables if parameters not provided
+
         sem = asyncio.Semaphore(concurrency)
         client_pool = []
+
+        logger.info(f"Starting Pokemon scraper with limit={limit}, concurrency={concurrency}")
 
         # Create a pool of clients
         for _ in range(concurrency):
@@ -92,10 +98,10 @@ class PokemonScraper:
                         raise  # Re-raise the exception for the test to catch
 
             # Create and run tasks
-            tasks = [
+            tasks = (
                 process_pokemon(pokemon_id)
                 for pokemon_id in range(1, limit + 1)
-            ]
+            )
             await asyncio.gather(*tasks)
 
         finally:
@@ -107,9 +113,16 @@ class PokemonScraper:
 
 if __name__ == "__main__":
     async def main():
+        # Load environment variables
+        load_dotenv()
+
+        # Get configuration from environment variables
+        scrapping_limit = int(os.getenv('POKEMON_SCRAPER_LIMIT', 151))
+        scrapping_concurrency = int(os.getenv('POKEMON_SCRAPER_CONCURRENCY', 10))
+
+
         await init_db()
         scraper = PokemonScraper()
-        await scraper.scrape_pokemon()
-        
+        await scraper.scrape_pokemon(scrapping_limit, scrapping_concurrency)
 
     asyncio.run(main()) 

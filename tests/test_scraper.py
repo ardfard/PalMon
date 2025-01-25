@@ -132,3 +132,14 @@ async def test_scrape_pokemon_update_existing(mock_response, db_session):
     pokemon = result.scalar_one()
     assert pokemon.name == "bulbasaur"
     assert pokemon.types == "grass,poison"
+
+@pytest.mark.asyncio
+async def test_scraper_session_creation():
+    """Test scraper session creation when no session is provided."""
+    scraper = PokemonScraper()
+    session = await scraper.session
+    assert session is not None
+    
+    # Test session can execute queries
+    result = await session.execute(select(Pokemon))
+    assert result is not None

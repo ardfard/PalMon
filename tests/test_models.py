@@ -1,6 +1,7 @@
 import pytest
 from palmon.database.models import Pokemon
 from sqlalchemy import select
+from sqlalchemy.sql import text
 
 @pytest.mark.asyncio
 async def test_pokemon_model_creation(db_session):
@@ -64,4 +65,62 @@ async def test_pokemon_to_dict_empty_types(db_session):
     )
     saved_pokemon = result.scalar_one()
     result = saved_pokemon.to_dict()
-    assert result["attributes"]["types"] == [] 
+    assert result["attributes"]["types"] == []
+
+
+@pytest.mark.asyncio
+async def test_pokemon_model_relationships(db_session):
+    """Test Pokemon model relationships and cascades."""
+    pokemon = Pokemon(
+        id=2000,
+        name="test_relations",
+        height=1.0,
+        weight=1.0,
+        types="fire",
+        image_url="test.png",
+        base_experience=100
+    )
+    
+    db_session.add(pokemon)
+    await db_session.commit()
+    
+    # Test deletion
+    await db_session.delete(pokemon)
+    await db_session.commit()
+    
+    result = await db_session.execute(
+        select(Pokemon).where(Pokemon.id == 2000)
+    )
+    assert result.first() is None
+
+@pytest.mark.asyncio
+async def test_init_db():
+    """Test database initialization."""
+    from palmon.database.models import init_db, engine, Base
+    
+    # Drop all tables first
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+    
+    # Test initialization
+    await init_db()
+    
+    # Verify tables were created
+    async with engine.begin() as conn:
+        result = await conn.run_sync(lambda sync_conn: 
+            sync_conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
+        )
+        tables = [row[0] for row in result]
+        assert "pokemon" in tables
+
+@pytest.mark.asyncio
+async def test_get_db():
+    """Test database session factory."""
+    from palmon.database.models import get_db
+    
+    async for session in get_db():
+        assert session is not None
+        # Test session can execute queries
+        result = await session.execute(select(Pokemon))
+        assert result is not None
+        break 

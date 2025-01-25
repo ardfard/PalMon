@@ -49,6 +49,14 @@ async def get_pokemon_list(
     """Get a list of Pokemon with pagination."""
     start_time = time.time()
     try:
+        # Validate pagination parameters
+        if page < 1:
+            raise HTTPException(status_code=400, detail="Invalid page number")
+        if limit < 1:
+            raise HTTPException(status_code=400, detail="Invalid limit")
+        if limit > 1000:
+            raise HTTPException(status_code=400, detail="Limit cannot exceed 1000")
+            
         offset = (page - 1) * limit
         
         # Use async query
@@ -71,6 +79,9 @@ async def get_pokemon_list(
         pokemon_requests.labels(endpoint='/api/pokemon', status='200').inc()
         request_duration.labels(endpoint='/api/pokemon').observe(time.time() - start_time)
         return response
+    except HTTPException:
+        pokemon_requests.labels(endpoint='/api/pokemon', status='400').inc()
+        raise
     except Exception as e:
         pokemon_requests.labels(endpoint='/api/pokemon', status='500').inc()
         raise HTTPException(status_code=500, detail=str(e))

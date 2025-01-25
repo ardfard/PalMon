@@ -12,29 +12,28 @@ def engine():
     """Create a test database engine."""
     return create_async_engine(TEST_DATABASE_URL, echo=True)
 
-@pytest.fixture(autouse=True)
-async def setup_database(engine):
-    """Set up the test database."""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
 @pytest.fixture
 async def db_session(engine):
     """Create a test database session."""
     async_session = sessionmaker(
         engine, class_=AsyncSession, expire_on_commit=False
     )
+    
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        
     async with async_session() as session:
         yield session
         await session.rollback()
+        
+        # Clean up
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
 
 @pytest.fixture
 async def sample_pokemon(db_session):
     """Create sample Pokemon data."""
-    pokemon1 = Pokemon(
+    pokemon = Pokemon(
         id=1,
         name="bulbasaur",
         height=0.7,
@@ -43,15 +42,8 @@ async def sample_pokemon(db_session):
         image_url="https://example.com/bulbasaur.png",
         base_experience=64
     )
-    pokemon2 = Pokemon(
-        id=2,
-        name="ivysaur",
-        height=1.0,
-        weight=13.0,
-        types="grass,poison",
-        image_url="https://example.com/ivysaur.png",
-        base_experience=142
-    )
-    db_session.add_all([pokemon1, pokemon2])
+    
+    db_session.add(pokemon)
     await db_session.commit()
-    return [pokemon1, pokemon2] 
+    
+    return pokemon

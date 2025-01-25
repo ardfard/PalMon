@@ -103,6 +103,43 @@ Once running, API documentation is available at:
 - `GET /api/pokemon/{id}`: Get specific Pokemon by ID
 - `GET /metrics`: Prometheus metrics
 
+## Configuration
+
+The Pokemon scraper can be configured using environment variables to control:
+- The number of Pokemon to scrape
+- The level of concurrency for scraping tasks
+
+### Configuration Options
+
+Create a `.env` file in the root directory with the following options:
+
+* `POKEMON_SCRAPER_LIMIT`: Controls how many Pokemon to scrape (1 to 1008)
+* `POKEMON_SCRAPER_CONCURRENCY`: Controls how many concurrent requests to make (recommended: 5-20)
+
+Example:
+
+```env
+POKEMON_SCRAPER_LIMIT=151
+
+POKEMON_SCRAPER_CONCURRENCY=10
+```
+
+- `POKEMON_SCRAPER_LIMIT`: Controls how many Pokemon to scrape. The scraping will happens sequentially from id 1 until the limit is reached. The default value is 151 (generation 1 number of pokemon). Maximum value as of this writing is 1025.
+- `POKEMON_SCRAPER_CONCURRENCY`: Controls how many concurrent requests to make. Default is 10 (recommended: 5-20).
+
+### Performance Considerations
+
+- Higher concurrency means faster scraping but may hit rate limits
+- Recommended settings:
+  - Small dataset: LIMIT=50, CONCURRENCY=5
+  - Medium dataset: LIMIT=151, CONCURRENCY=10
+  - Full dataset: LIMIT=1025, CONCURRENCY=20
+
+The scraper will automatically:
+- Handle rate limiting
+- Retry failed requests
+- Update existing Pokemon data
+- Log progress to console
 ## Development
 
 ### Running Tests
@@ -128,3 +165,4 @@ MIT
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+

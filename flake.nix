@@ -33,6 +33,13 @@
             # Additional system libraries
             zlib
             openssl
+
+            # jq
+            jq
+
+            # Process management tools (pkill, killall, etc)
+            psmisc
+
           ];
 
           buildInputs = with pkgs; [

@@ -1,0 +1,51 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.py[cod]
+*$py.class
+.pytest_cache
+.coverage
+htmlcov
+.tox
+.nox
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+
+# Build and dist
+*.egg-info/
+dist/
+build/
+
+# Project specific
+pokemon.db
+result
+.direnv
+.envrc
+
+# Nix
+.nix-profile
+.nix-defexpr
+.nix-channels 
+
+# data
+data/

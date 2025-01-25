@@ -20,6 +20,7 @@ test_endpoint() {
     if [ "$status" -eq "$expected_status" ]; then
         echo -e "${GREEN}✓ Status $status OK${NC}"
         # Check if response is valid JSON
+        echo $(echo "$body" | jq .)
         if echo "$body" | jq . >/dev/null 2>&1; then
             echo -e "${GREEN}✓ Valid JSON response${NC}"
         else

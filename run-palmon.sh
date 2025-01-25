@@ -112,9 +112,6 @@ if ! nix show-config | grep -q "experimental-features.*flakes"; then
     echo "Enabling Nix flakes..."
     mkdir -p ~/.config/nix
     echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
-    echo "Flakes have been enabled. Please restart your shell for changes to take effect."
-    echo "Please run this script again after restarting your shell."
-    exit 0
 fi
 
 echo "Step 3: Setting up development environment..."

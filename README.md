@@ -129,8 +129,9 @@ The Pokemon scraper can be configured using environment variables to control:
 
 Create a `.env` file in the root directory with the following options:
 
-* `POKEMON_SCRAPER_LIMIT`: Controls how many Pokemon to scrape (1 to 1008)
-* `POKEMON_SCRAPER_CONCURRENCY`: Controls how many concurrent requests to make (recommended: 5-20)
+- `POKEMON_SCRAPER_LIMIT`: Controls how many Pokemon to scrape. The scraping will happens sequentially from id 1 until the limit is reached. The default value is 151 (generation 1 number of pokemon). Maximum value as of this writing is 1025.
+- `POKEMON_SCRAPER_CONCURRENCY`: Controls how many concurrent requests to make. Default is 10 (recommended: 5-20).
+- `DATABASE_PATH`: Controls the path to the database file. The default value is `./pokemon.db`.
 
 Example:
 
@@ -138,10 +139,9 @@ Example:
 POKEMON_SCRAPER_LIMIT=151
 
 POKEMON_SCRAPER_CONCURRENCY=10
-```
 
-- `POKEMON_SCRAPER_LIMIT`: Controls how many Pokemon to scrape. The scraping will happens sequentially from id 1 until the limit is reached. The default value is 151 (generation 1 number of pokemon). Maximum value as of this writing is 1025.
-- `POKEMON_SCRAPER_CONCURRENCY`: Controls how many concurrent requests to make. Default is 10 (recommended: 5-20).
+DATABASE_PATH=data/pokemon.db
+```
 
 ### Performance Considerations
 

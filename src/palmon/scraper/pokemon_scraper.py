@@ -4,7 +4,7 @@ import logging
 import traceback
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from palmon.database.models import Pokemon, AsyncSessionLocal
+from palmon.database.models import Pokemon, AsyncSessionLocal, init_db
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -107,7 +107,9 @@ class PokemonScraper:
 
 if __name__ == "__main__":
     async def main():
+        await init_db()
         scraper = PokemonScraper()
         await scraper.scrape_pokemon()
+        
 
     asyncio.run(main()) 

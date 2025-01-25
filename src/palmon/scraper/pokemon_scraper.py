@@ -39,8 +39,17 @@ class PokemonScraper:
             )
             return None
 
-    async def scrape_pokemon(self, limit=None, concurrency=None):
-        # Use environment variables if parameters not provided
+    async def scrape_pokemon(self, limit=151, concurrency=10):
+        """
+        Scrape Pokemon data from the API.
+        
+        Args:
+            limit (int): Number of Pokemon to scrape (default: 151)
+            concurrency (int): Number of concurrent requests (default: 10)
+        """
+        # Ensure we have valid values for limit and concurrency
+        limit = limit if limit is not None else 151
+        concurrency = concurrency if concurrency is not None else 10
 
         sem = asyncio.Semaphore(concurrency)
         client_pool = []

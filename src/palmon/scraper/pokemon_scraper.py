@@ -37,19 +37,18 @@ class PokemonScraper:
             )
             return None
 
-    async def scrape_pokemon(self, limit=151):
+    async def scrape_pokemon(self, limit=151, concurrency=10):
         db = await self.session
 
-        async with httpx.AsyncClient() as client:
-            tasks = [
-                self.fetch_pokemon(client, pokemon_id)
-                for pokemon_id in range(1, limit + 1)
-            ]
-            results = await asyncio.gather(*tasks)
+        # Limit concurrency with a semaphore
+        sem = asyncio.Semaphore(concurrency)
 
-            for data in results:
+        # Define an inner function that respects the semaphore
+        async def process_pokemon(client, pokemon_id):
+            async with sem:
+                data = await self.fetch_pokemon(client, pokemon_id)
                 if data is None:
-                    continue
+                    return
 
                 pokemon = Pokemon(
                     id=data['id'],
@@ -61,7 +60,6 @@ class PokemonScraper:
                     base_experience=data['base_experience']
                 )
 
-                # Check for existing pokemon using async query
                 stmt = select(Pokemon).where(Pokemon.id == pokemon.id)
                 result = await db.execute(stmt)
                 existing = result.scalar_one_or_none()
@@ -72,6 +70,14 @@ class PokemonScraper:
                 db.add(pokemon)
                 await db.commit()
                 logger.info(f"Scraped Pokémon: {pokemon.name}")
+
+        async with httpx.AsyncClient() as client:
+            # Create and run tasks
+            tasks = [
+                process_pokemon(client, pokemon_id)
+                for pokemon_id in range(1, limit + 1)
+            ]
+            await asyncio.gather(*tasks)
 
         return True
 

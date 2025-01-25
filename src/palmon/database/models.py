@@ -1,7 +1,11 @@
 import os
+import logging
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import Column, Integer, String, Float
+
+# Configure SQLAlchemy logging
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 
 Base = declarative_base()
 
@@ -32,7 +36,10 @@ class Pokemon(Base):
 
 # Use aiosqlite for async SQLite support
 database_path = os.getenv('DATABASE_PATH', 'pokemon.db')
-engine = create_async_engine(f'sqlite+aiosqlite:///{database_path}', echo=True)
+engine = create_async_engine(
+    f'sqlite+aiosqlite:///{database_path}', 
+    echo=False  # Disable SQL echoing
+)
 
 # Create async session factory
 AsyncSessionLocal = sessionmaker(

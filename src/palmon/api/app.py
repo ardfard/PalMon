@@ -8,6 +8,7 @@ from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from starlette_prometheus import metrics, PrometheusMiddleware
 from prometheus_client import Counter, Histogram
+from dotenv import load_dotenv
 import time
 
 # Create custom metrics
@@ -119,4 +120,5 @@ async def get_pokemon_by_id(
 
 if __name__ == "__main__":
     import uvicorn
+    load_dotenv()
     uvicorn.run(app, host="0.0.0.0", port=8000)

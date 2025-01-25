@@ -1,7 +1,9 @@
 from fastapi import FastAPI, HTTPException, Depends
-from palmon.database.models import SessionLocal, Pokemon
+from palmon.database.models import AsyncSessionLocal as SessionLocal, Pokemon
 from palmon.database import get_db
 from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from starlette_prometheus import metrics, PrometheusMiddleware
@@ -16,13 +18,13 @@ pokemon_requests = Counter(
 )
 
 request_duration = Histogram(
-    'request_duration_seconds',
-    'Request duration in seconds',
+    'pokemon_request_duration_seconds',
+    'Time spent processing Pokemon requests',
     ['endpoint']
 )
 
 app = FastAPI(
-    title="Pokemon API",
+    title="PalMon API",
 )
 
 # Add Prometheus middleware
@@ -39,25 +41,30 @@ app.add_middleware(
 )
 
 @app.get("/api/pokemon")
-async def get_pokemon(page: int = 1, limit: int = 10, db: Session = Depends(get_db)):
+async def get_pokemon_list(
+    page: int = 1,
+    limit: int = 10,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get a list of Pokemon with pagination."""
     start_time = time.time()
     try:
         offset = (page - 1) * limit
-        pokemon_list = db.query(Pokemon).offset(offset).limit(limit).all()
-        total = db.query(Pokemon).count()
+        
+        # Use async query
+        stmt = select(Pokemon).offset(offset).limit(limit)
+        result = await db.execute(stmt)
+        pokemon_list = result.scalars().all()
         
         response = {
             "data": [pokemon.to_dict() for pokemon in pokemon_list],
             "meta": {
-                "total": total,
                 "page": page,
                 "limit": limit
             },
             "links": {
                 "self": f"/api/pokemon?page={page}&limit={limit}",
-                "first": f"/api/pokemon?page=1&limit={limit}",
-                "last": f"/api/pokemon?page={-(-total//limit)}&limit={limit}",
-                "next": f"/api/pokemon?page={page+1}&limit={limit}" if offset + limit < total else None,
+                "next": f"/api/pokemon?page={page+1}&limit={limit}",
                 "prev": f"/api/pokemon?page={page-1}&limit={limit}" if page > 1 else None
             }
         }
@@ -69,11 +76,18 @@ async def get_pokemon(page: int = 1, limit: int = 10, db: Session = Depends(get_
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/pokemon/{pokemon_id}")
-async def get_pokemon_by_id(pokemon_id: int, db: Session = Depends(get_db)):
+async def get_pokemon_by_id(
+    pokemon_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get a specific Pokemon by ID."""
     start_time = time.time()
     try:
-        pokemon = db.query(Pokemon).filter_by(id=pokemon_id).first()
-        if not pokemon:
+        stmt = select(Pokemon).where(Pokemon.id == pokemon_id)
+        result = await db.execute(stmt)
+        pokemon = result.scalar_one_or_none()
+        
+        if pokemon is None:
             pokemon_requests.labels(endpoint='/api/pokemon/{id}', status='404').inc()
             raise HTTPException(status_code=404, detail="Pokemon not found")
         

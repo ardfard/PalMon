@@ -103,8 +103,9 @@ async def test_scrape_pokemon_success(mock_response, db_session):
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_scrape_pokemon_update_existing(mock_response, test_db):
+async def test_scrape_pokemon_update_existing(mock_response, db_session):
     """Test scraping when Pokemon already exists."""
+    # First create an existing Pokemon
     existing_pokemon = Pokemon(
         id=1,
         name="old_name",
@@ -114,16 +115,20 @@ async def test_scrape_pokemon_update_existing(mock_response, test_db):
         image_url="old.png",
         base_experience=100
     )
-    test_db.add(existing_pokemon)
-    test_db.commit()
+    
+    # Use async operations for setup
+    db_session.add(existing_pokemon)
+    await db_session.commit()
     
     respx.get("https://pokeapi.co/api/v2/pokemon/1").mock(
         return_value=httpx.Response(200, json=mock_response)
     )
     
-    scraper = PokemonScraper(session=test_db)
+    scraper = PokemonScraper(session=db_session)
     await scraper.scrape_pokemon(limit=1)
     
-    pokemon = test_db.query(Pokemon).first()
+    # Use async query to check results
+    result = await db_session.execute(select(Pokemon).where(Pokemon.id == 1))
+    pokemon = result.scalar_one()
     assert pokemon.name == "bulbasaur"
     assert pokemon.types == "grass,poison"

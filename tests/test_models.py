@@ -18,7 +18,10 @@ async def test_pokemon_model_creation(db_session):
     db_session.add(pokemon)
     await db_session.commit()
     
-    result = await db_session.execute(select(Pokemon))
+    # Query specifically for the Pokemon we just created
+    result = await db_session.execute(
+        select(Pokemon).where(Pokemon.id == 1)
+    )
     saved_pokemon = result.scalar_one()
     assert saved_pokemon.name == "bulbasaur"
     assert saved_pokemon.types == "grass,poison"
@@ -26,7 +29,10 @@ async def test_pokemon_model_creation(db_session):
 @pytest.mark.asyncio
 async def test_pokemon_to_dict(db_session, sample_pokemon):
     """Test Pokemon to_dict method."""
-    result = await db_session.execute(select(Pokemon))
+    # Query for a specific Pokemon (first one from sample data)
+    result = await db_session.execute(
+        select(Pokemon).where(Pokemon.id == 1)
+    )
     pokemon = result.scalar_one()
     pokemon_dict = pokemon.to_dict()
     
@@ -36,10 +42,11 @@ async def test_pokemon_to_dict(db_session, sample_pokemon):
     assert "grass" in pokemon_dict["attributes"]["types"]
     assert "poison" in pokemon_dict["attributes"]["types"]
 
-def test_pokemon_to_dict_empty_types(test_db):
+@pytest.mark.asyncio
+async def test_pokemon_to_dict_empty_types(db_session):
     """Test Pokemon to_dict method with empty types."""
     pokemon = Pokemon(
-        id=1,
+        id=999,  # Use a different ID to avoid conflicts
         name="test",
         height=1.0,
         weight=1.0,
@@ -48,8 +55,13 @@ def test_pokemon_to_dict_empty_types(test_db):
         base_experience=100
     )
     
-    test_db.add(pokemon)
-    test_db.commit()
+    db_session.add(pokemon)
+    await db_session.commit()
     
-    result = pokemon.to_dict()
+    # Query for the specific Pokemon we just created
+    result = await db_session.execute(
+        select(Pokemon).where(Pokemon.id == 999)
+    )
+    saved_pokemon = result.scalar_one()
+    result = saved_pokemon.to_dict()
     assert result["attributes"]["types"] == [] 

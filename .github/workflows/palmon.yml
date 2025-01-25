@@ -1,4 +1,4 @@
-name: PalMon CI
+name: Smoke Test
 
 on:
   push:

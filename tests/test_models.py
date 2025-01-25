@@ -1,7 +1,9 @@
 import pytest
 from palmon.database.models import Pokemon
+from sqlalchemy import select
 
-def test_pokemon_model_creation(test_db):
+@pytest.mark.asyncio
+async def test_pokemon_model_creation(db_session):
     """Test Pokemon model creation."""
     pokemon = Pokemon(
         id=1,
@@ -13,16 +15,19 @@ def test_pokemon_model_creation(test_db):
         base_experience=64
     )
     
-    test_db.add(pokemon)
-    test_db.commit()
+    db_session.add(pokemon)
+    await db_session.commit()
     
-    saved_pokemon = test_db.query(Pokemon).first()
+    result = await db_session.execute(select(Pokemon))
+    saved_pokemon = result.scalar_one()
     assert saved_pokemon.name == "bulbasaur"
     assert saved_pokemon.types == "grass,poison"
 
-def test_pokemon_to_dict(test_db, sample_pokemon):
+@pytest.mark.asyncio
+async def test_pokemon_to_dict(db_session, sample_pokemon):
     """Test Pokemon to_dict method."""
-    pokemon = test_db.query(Pokemon).first()
+    result = await db_session.execute(select(Pokemon))
+    pokemon = result.scalar_one()
     pokemon_dict = pokemon.to_dict()
     
     assert pokemon_dict["type"] == "pokemon"

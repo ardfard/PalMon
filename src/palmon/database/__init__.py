@@ -1,10 +1,11 @@
 """Database package."""
-from palmon.database.models import SessionLocal
+from palmon.database.models import AsyncSessionLocal as SessionLocal
+from palmon.database.models import Base, init_db
 
-def get_db():
-    """Get database session."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close() 
+async def get_db():
+    """Dependency for getting DB sessions."""
+    async with SessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close() 

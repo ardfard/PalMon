@@ -71,24 +71,40 @@ If you already have a Python environment and the `uv` package manager, you can m
    cd PalMon
    ```
 
-2. **Install dependencies**:
+1. **Create a virtual environment**:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   ```
+
+1. **Install dependencies**:
    ```bash
    uv pip install -e .
    ```
 
-3. **Run the scraper**:
+1. ** change directory to src or add src to PYTHONPATH** :
+   ```bash
+   cd src
+
+   # or
+
+   export PYTHONPATH="$PWD/src:$PYTHONPATH"
+   ```
+
+1. **Run the scraper**:
    ```bash
    python -m palmon.scraper.pokemon_scraper
    ```
 
-4. **Start the API server**:
+1. **Start the API server**:
    ```bash
    python -m palmon.api.app
    ```
 
-5. **Run smoke tests**:
+1. **Run smoke tests**:
    ```bash
-   python -m palmon.tests.smoke_tests
+   ./smoke_test.sh
+ 
    ```
 
 ## API Documentation
@@ -140,6 +156,8 @@ The scraper will automatically:
 - Retry failed requests
 - Update existing Pokemon data
 - Log progress to console
+
+
 ## Development
 
 ### Running Tests
